@@ -7,6 +7,10 @@ one in place - screens can freely mix text-only and photo/video content,
 and Telegram's editMessageMedia/editMessageText don't interchange cleanly
 across that boundary, so a fresh message per screen is simpler and more
 reliable than trying to edit around it.
+
+Broadcast audience: every /start here also upserts the sender into
+BotUser (see handlers/broadcast.py) - that's how 📢 Broadcast and
+📊 Analytics under /admin know who's used the bot.
 """
 from aiogram import Router, types, F
 from aiogram.filters import Command
@@ -54,6 +58,13 @@ async def send_screen(target, screen: Screen) -> None:
 
 @router.message(Command("start"))
 async def cmd_start(message: types.Message) -> None:
+    # Lazy import to avoid a module-load-time cycle (handlers/broadcast.py
+    # imports handlers/common.py, not this module, so there's no actual
+    # cycle today - but importing at call time here matches the pattern
+    # used elsewhere in this bot family and costs nothing).
+    from handlers.broadcast import record_bot_user
+    await record_bot_user(message.from_user)
+
     async with session() as s:
         q = select(Screen).where(Screen.key == "start")
         res = await s.execute(q)

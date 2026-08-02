@@ -13,6 +13,8 @@ def admin_menu_kb() -> types.InlineKeyboardMarkup:
         [types.InlineKeyboardButton(text="✏️ Edit Start Message", callback_data="admin:edit_start")],
         [types.InlineKeyboardButton(text="\U0001F4CB List Screens", callback_data="admin:list_screens")],
         [types.InlineKeyboardButton(text="➕ Add Screen", callback_data="admin:add_screen")],
+        [types.InlineKeyboardButton(text="📢 Broadcast", callback_data="admin:broadcast")],
+        [types.InlineKeyboardButton(text="📊 Analytics", callback_data="admin:analytics")],
     ])
 
 
