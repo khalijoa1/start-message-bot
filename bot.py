@@ -7,7 +7,7 @@ from aiogram.client.default import DefaultBotProperties
 from config import get_settings
 from db import init_db
 
-from handlers import admin, start, fallback
+from handlers import admin, start, broadcast, analytics, fallback
 
 logging.basicConfig(level=logging.INFO)
 
@@ -19,6 +19,8 @@ async def main() -> None:
 
     dp.include_router(admin.router)
     dp.include_router(start.router)
+    dp.include_router(broadcast.router)
+    dp.include_router(analytics.router)
     dp.include_router(fallback.router)  # must stay last - catch-all diagnostic
 
     await init_db()

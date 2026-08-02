@@ -6,6 +6,16 @@ small and every access pattern here is a plain, explicit query (see
 handlers/start.py and handlers/admin.py), which sidesteps any risk of
 ambiguous-foreign-key configuration since Button has two FKs into Screen
 (screen_id and target_screen_id).
+
+BotUser tracks everyone who has ever pressed /start - that's the audience
+📢 Broadcast (handlers/broadcast.py) sends to, and what 📊 Analytics
+(handlers/analytics.py) counts. Telegram only lets a bot DM someone who
+has started a conversation with it, so recording on /start is exactly the
+qualifying interaction - nothing here scrapes contacts or messages anyone
+who hasn't opened a chat with the bot themselves. A row is removed the
+moment a broadcast send comes back "forbidden" (user blocked the bot or
+deactivated their account), so the audience naturally shrinks to only
+reachable users over time.
 """
 import enum
 from datetime import datetime
@@ -49,3 +59,13 @@ class Button(Base):
     url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     target_screen_id: Mapped[int | None] = mapped_column(ForeignKey("screens.id"), nullable=True)
     position: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class BotUser(Base):
+    __tablename__ = "bot_users"
+
+    user_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    username: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    first_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
