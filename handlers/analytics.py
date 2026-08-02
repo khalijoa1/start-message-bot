@@ -5,6 +5,7 @@ the operator has built so far.
 from datetime import datetime, timedelta
 
 from aiogram import Router, types, F
+from aiogram.exceptions import TelegramBadRequest
 from sqlalchemy import select, func
 
 from db import session
@@ -42,5 +43,16 @@ async def show_analytics(query: types.CallbackQuery) -> None:
         f"🖼 Screens: {screen_count}\n"
         f"🔘 Buttons: {button_count}"
     )
-    await query.message.edit_text(text, reply_markup=admin_menu_kb())
+    try:
+        await query.message.edit_text(text, reply_markup=admin_menu_kb())
+    except TelegramBadRequest as e:
+        # Tapping "Analytics" again when the counts haven't changed since
+        # the last tap sends Telegram identical text+markup, which it
+        # rejects with "message is not modified" instead of silently
+        # no-op'ing - previously unhandled here, so it surfaced as a full
+        # traceback and the callback just hung with a loading spinner on
+        # the user's end. The counts genuinely not having changed isn't an
+        # error worth logging; anything else from Telegram still is.
+        if "message is not modified" not in str(e):
+            raise
     await query.answer()
